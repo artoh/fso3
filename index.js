@@ -72,16 +72,30 @@ app.post("/api/persons", (req,res) => {
         name: nimi,
         number: numero,
     })
-    
-    person
-      .save()
-      .then( savedPerson => {
-          res.json(Person.format(savedPerson))
-      })
-      .catch( error => { 
-          res.status(400).send({error : "bad request"})
-      })
 
+    Person
+        .findOne({name: nimi})
+        .then( result => {
+            console.log( result )
+            if( result !== null ) {
+                // On jo olemassa
+                res.status(409).send({error: 'name already exists'})
+
+            } else {
+                
+                // Voidaan lisätä
+                person
+                .save()
+                .then( savedPerson => {
+                    res.json(Person.format(savedPerson))
+                })
+                .catch( error => { 
+                    res.status(400).send({error : "bad request"})
+                })
+          
+
+            }
+        })    
 })
 
 app.put("/api/persons/:id", (req, res) => {

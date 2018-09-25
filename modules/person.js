@@ -1,8 +1,10 @@
-salainen = require('../salainen')
+if( process.env.NODE_ENV != "production") {
+    require("dotenv").config()
+}
 
 const mongoose = require('mongoose')
 
-const url = "mongodb://" + salainen.salaisuus + "@ds229438.mlab.com:29438/fso3"
+const url = process.env.MONGODB_URI
 
 mongoose.connect(url, { useNewUrlParser : true})
 
