@@ -19,36 +19,39 @@ app.use( morgan(":method :url :json :status :res[content-length] - :response-tim
 
 app.use( express.static("build"))
 
-const formatPerson = (person) => {
-    return {
-        name: person.name,
-        number: person.number,
-        id: person._id
-    }
-}
-
 app.get("/api/persons", (req,res) => {
     Person 
      .find({},{ __v : 0})
      .then( persons => {
-         res.json( persons.map(formatPerson))
+         res.json( persons.map( Person.format ))
+     })
+     .catch(error => {
+         console.log( error )
      })
 })
 
 app.get("/api/persons/:id", (req,res) => {
     Person 
-     .findById( request.params.id)
+     .findById( req.params.id)
      .then( person => {
-         res.json(formatPerson(person))
+         res.json(Person.format(person))
+     })
+     .catch(error => {
+         console.log(error)
+         return res.status(400).send({error: "malformatted id"})
      })
 })
 
 app.delete("/api/persons/:id", (req,res) => {
 
     Person
-      .findByIdAndRemove({_id : req.params.id})
-      .then( doc => {
+      .findOneAndDelete({_id: req.params.id})
+      .then( result => {
           res.status(204).end();
+      })
+      .catch( error => {
+          console.log(error)
+          return res.status(400).send({ error: "malformatted id"})
       })
 })
 
@@ -73,22 +76,48 @@ app.post("/api/persons", (req,res) => {
     person
       .save()
       .then( savedPerson => {
-          res.json(formatPerson(savedPerson))
+          res.json(Person.format(savedPerson))
+      })
+      .catch( error => { 
+          res.status(400).send({error : "bad request"})
       })
 
 })
 
-app.get("/info", (req,res) => {
-  const date = new Date()
-  const vastaus = 'Puhelinluettelossa ' + phones.length + ' henkilön tiedot \n\n'+ date
-  res.writeHead(200, {"Content-type" : "text/plain; charset=utf-8"})  
-  res.end(vastaus);
+app.put("/api/persons/:id", (req, res) => {
+    const body = req.body;
+    const person = {
+        name: body.name,
+        number: body.number
+    }
+
+    Person
+      .findOneAndUpdate({__id: req.params.id}, person, {new: true})
+      .then( paivitetty => {
+          res.json( Person.format(paivitetty))
+      })
+      .catch( error => {
+          console.log( error)
+          res.status(400).send({error: "malformed id"})
+      })
 })
 
-
+app.get("/info", (req,res) => {
+    const date = new Date()
+    Person 
+     .find({},{ __v : 0})
+     .then( persons => {
+        const vastaus = 'Puhelinluettelossa ' + persons.length + ' henkilön tiedot \n\n'+ date
+        res.writeHead(200, {"Content-type" : "text/plain; charset=utf-8"})  
+        res.end(vastaus);             
+     })
+     .catch(error => {
+         console.log( error )
+     })
+ })
 
 
 const PORT =  process.env.PORT || 3001
 app.listen(PORT, () => {
-    console.log("Server running on port ${PORT}")
+    console.log("Server running on port " + PORT)
 })
