@@ -15,6 +15,7 @@ morgan.token('json', function getJson(req) {
 
 app.use( morgan(":method :url :json :status :res[content-length] - :response-time ms"))
 
+app.use( express.static("build"))
 
 let phones = [
     {
