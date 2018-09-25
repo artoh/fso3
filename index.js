@@ -106,7 +106,7 @@ app.put("/api/persons/:id", (req, res) => {
     }
 
     Person
-      .findOneAndUpdate({__id: req.params.id}, person, {new: true})
+      .findOneAndUpdate({ _id: req.params.id}, person, {new: true})
       .then( paivitetty => {
           res.json( Person.format(paivitetty))
       })
