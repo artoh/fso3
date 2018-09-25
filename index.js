@@ -5,6 +5,8 @@ const bodyParser = require("body-parser")
 const morgan = require('morgan')
 const cors = require('cors')
 
+const Person = require('./modules/person')
+
 app.use(cors())
 
 app.use( bodyParser.json())
@@ -17,49 +19,37 @@ app.use( morgan(":method :url :json :status :res[content-length] - :response-tim
 
 app.use( express.static("build"))
 
-let phones = [
-    {
-        name: "Arto Hellas",
-        number: "040-123456",
-        id: 1
-    },
-    {
-        name: "Martti Tienari",
-        number: "040-123456",
-        id: 2
-    },
-    {
-        name: "Arto Järvinen",
-        number: "040-123456",
-        id: 3
-    },
-    {
-        name: "Lea Kutvonen",
-        number: "040-123456",
-        id:4
+const formatPerson = (person) => {
+    return {
+        name: person.name,
+        number: person.number,
+        id: person._id
     }
-]
+}
 
 app.get("/api/persons", (req,res) => {
-    res.json(phones)
+    Person 
+     .find({},{ __v : 0})
+     .then( persons => {
+         res.json( persons.map(formatPerson))
+     })
 })
 
 app.get("/api/persons/:id", (req,res) => {
-    const id = Number(req.params.id)
-    const person = phones.find(person => person.id === id)
-
-    if( person ) {
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
+    Person 
+     .findById( request.params.id)
+     .then( person => {
+         res.json(formatPerson(person))
+     })
 })
 
 app.delete("/api/persons/:id", (req,res) => {
-    const id = Number(req.params.id)
-    phones = phones.filter( phone => phone.id !== id)
 
-    res.status(204).end()
+    Person
+      .findByIdAndRemove({_id : req.params.id})
+      .then( doc => {
+          res.status(204).end();
+      })
 })
 
 
@@ -74,21 +64,18 @@ app.post("/api/persons", (req,res) => {
     if( numero === undefined) {
         return res.status(400).json({error: 'number missing.'})
     }
-    if( phones.find(person => person.name === nimi) )
-    {
-        return res.status(400).json({error: 'name must be unique.'})
-    }
 
-    const person = {
+    const person = new Person({
         name: nimi,
         number: numero,
-        id: Math.floor(Math.random() * 99999)
-    }
+    })
     
-    console.log(person)
+    person
+      .save()
+      .then( savedPerson => {
+          res.json(formatPerson(savedPerson))
+      })
 
-    phones = phones.concat( person )
-    res.json(person)
 })
 
 app.get("/info", (req,res) => {
