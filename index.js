@@ -1,7 +1,9 @@
 
 const express = require("express")
 const app = express()
+const bodyParser = require("body-parser")
 
+app.use( bodyParser.json())
 
 let phones = [
     {
@@ -45,7 +47,36 @@ app.delete("/api/persons/:id", (req,res) => {
     const id = Number(req.params.id)
     phones = phones.filter( phone => phone.id !== id)
 
-    response.status(204).end()
+    res.status(204).end()
+})
+
+
+app.post("/api/persons", (req,res) => {
+    
+    const nimi = req.body.name
+    const numero = req.body.number
+
+    if( nimi === undefined) {
+        return res.status(400).json({error : 'name missing.'})
+    }
+    if( numero === undefined) {
+        return res.status(400).json({error: 'number missing.'})
+    }
+    if( phones.find(person => person.name === nimi) )
+    {
+        return res.status(400).json({error: 'name must be unique.'})
+    }
+
+    const person = {
+        name: nimi,
+        number: numero,
+        id: Math.floor(Math.random() * 99999)
+    }
+    
+    console.log(person)
+
+    phones = phones.concat( person )
+    res.json(person)
 })
 
 app.get("/info", (req,res) => {
